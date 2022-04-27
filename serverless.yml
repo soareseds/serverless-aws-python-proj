@@ -1,5 +1,3 @@
-org: soareseds
-app: aws-python-project
 service: aws-python-proj
 
 frameworkVersion: '3'

@@ -1,0 +1,13 @@
+org: soareseds
+app: aws-python-project
+service: aws-python-proj
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: python3.8
+
+functions:
+  hello:
+    handler: handler.hello

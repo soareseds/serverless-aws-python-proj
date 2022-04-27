@@ -1,22 +1,44 @@
-org: soareseds
-app: aws-python-project
 service: aws-python-proj
 
 frameworkVersion: '3'
 
+custom:
+  vpc:
+    privateSubnetIds: ${cf:terraform-exports-network-serverless-test.PrivateSubnetIds}
+    securityGroupIds: "sg-0650bea1295b0aac9" # Create the Security Group for the lambda function on terraform and map it here.
+  api:
+    env: dev
+    domainName: test-lambda.labs2.dnx.host # Domain created on the Custom domain name via Terraform.
+
 provider:
   name: aws
   runtime: python3.8
+  stage: ${env:SLS_STAGE, 'dev'}
+  region: ${env:AWS_DEFAULT_REGION, 'us-east-1'}
+  # Include here if you would like to have all functions in the vpc.
+  vpc:
+    securityGroupIds: { 'Fn::Split': [',', '${self:custom.vpc.securityGroupIds}'] }
+    subnetIds: { 'Fn::Split': [',', '${self:custom.vpc.privateSubnetIds}'] }
 
 functions:
   hello:
     handler: handler.hello
-    vpc:
-      securityGroupIds:
-        - sg-0650bea1295b0aac9
-      subnetIds:
-        - subnet-0ee9704c274972d9b
+    # Include here if you would like to have just this function in the vpc.
+    # vpc:
+    #   securityGroupIds: { 'Fn::Split': [',', '${self:custom.vpc.securityGroupIds}'] }
+    #   subnetIds: { 'Fn::Split': [',', '${self:custom.vpc.privateSubnetIds}'] }
     events:
       - http:
           path: hello
           method: get
+
+# Create the custom domain name in terraform (https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_domain_name)
+resources:
+  Resources:
+    ApiGatewayBasePathMapping:
+      Type: AWS::ApiGateway::BasePathMapping
+      Properties:
+        DomainName: ${self:custom.api.domainName}
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        Stage: ${self:provider.stage}

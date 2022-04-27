@@ -16,7 +16,6 @@ functions:
         - sg-0650bea1295b0aac9
       subnetIds:
         - subnet-0ee9704c274972d9b
-	
     events:
       - http:
           path: hello
